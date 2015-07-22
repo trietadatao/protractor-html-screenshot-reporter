@@ -50,20 +50,34 @@ function defaultMetaDataBuilder(spec, descriptions, results, capabilities) {
 				, version: capabilities.caps_.version
 			}
 		};
-	if(results.items_.length > 0) {
-		var result = results.items_[0];
+	metaData.trace = "";
+	metaData.message = "";
+
+	if (ticketUrls.hasOwnProperty(metaData.description)) {
+		metaData.message += '<p>Ticket: <a target="_blank" href="' + ticketUrls[metaData.description] +
+			'">' + ticketUrls[metaData.description] + '</a></p>';
+	}
+
+	if (notebookUrls.hasOwnProperty(metaData.description)) {
+		for (var i = 0; i < notebookUrls[metaData.description].length; i++) {
+			metaData.message += '<p><a target="_blank" href="' + notebookUrls[metaData.description][i] +
+				'">' + notebookUrls[metaData.description][i] + '</a></p>';
+		}
+	}
+
+	for (var i = 0; i < results.items_.length; i++) {
+		var result = results.items_[i];
 		if(!results.passed()){
-			var failedItem = _.where(results.items_,{passed_: false})[0];
+			var failedItem = _.where(results.items_,{passed_: false})[i];
 			if(failedItem){
-				metaData.message = failedItem.message || 'Failed';
-				metaData.trace = failedItem.trace? (failedItem.trace.stack || 'No Stack trace information') : 'No Stack trace information';
+				metaData.message += '<br/><p><b>' + (i+1) + '</b>. ' + failedItem.message + '</p>' || 'Failed';
+				metaData.trace += '<br/>' + failedItem.trace? ('<p>' + failedItem.trace.stack + '</p>' || 'No Stack trace information') : 'No Stack trace information';
 			}
 
 		}else{
-			metaData.message = result.message || 'Passed';
-			metaData.trace = result.trace.stack;
+			metaData.message += '<br/><p><b>' + (i+1) + '</b>. ' + result.message + '</p>' || 'Passed';
+			metaData.trace += '<br/><p>' + result.trace.stack + '</p>';
 		}
-
 	}
 
 	return metaData;
@@ -108,10 +122,7 @@ function ScreenshotReporter(options) {
 	}
 
 	this.pathBuilder = options.pathBuilder || defaultPathBuilder;
-	this.disableMetaData = options.disableMetaData || false;
-	this.combinedJsonFileName = options.combinedJsonFileName || 'combined.json';
 	this.docTitle = options.docTitle || 'Generated test report';
-	this.docHeader = options.docHeader || 'Test Results';
 	this.docName = options.docName || 'report.html';
 	this.metaDataBuilder = options.metaDataBuilder || defaultMetaDataBuilder;
 	this.preserveDirectory = options.preserveDirectory || false;
@@ -124,11 +135,8 @@ function ScreenshotReporter(options) {
  		takeScreenShotsForSkippedSpecs: this.takeScreenShotsForSkippedSpecs,
  		metaDataBuilder: this.metaDataBuilder,
  		pathBuilder: this.pathBuilder,
- 		disableMetaData: this.disableMetaData,
- 		combinedJsonFileName: this.combinedJsonFileName,
  		baseDirectory: this.baseDirectory,
  		docTitle: this.docTitle,
- 		docHeader: this.docHeader,
  		docName: this.docName,
  		cssOverrideFile: this.cssOverrideFile
  	};
@@ -150,17 +158,12 @@ function reportSpecResults(spec) {
 	/* global browser */
 	var self = this
 		, results = spec.results()
-		, takeScreenshot
-		, finishReport;
 
 	if(!self.takeScreenShotsForSkippedSpecs && results.skipped) {
 		return;
 	}
 
-	takeScreenshot = !(self.takeScreenShotsOnlyForFailedSpecs && results.passed());
-
-	finishReport = function(png) {
-
+	browser.takeScreenshot().then(function (png) {
 		browser.getCapabilities().then(function (capabilities) {
 			var descriptions = util.gatherDescriptions(
 					spec.suite
@@ -196,30 +199,14 @@ function reportSpecResults(spec) {
 					throw new Error('Could not create directory ' + directory);
 				} else {
 					util.addMetaData(metaData, metaDataPath, descriptions, self.finalOptions);
-					if(takeScreenshot) {
+					if(!(self.takeScreenShotsOnlyForFailedSpecs && results.passed())) {
 						util.storeScreenShot(png, screenShotPath);
-					}
-					if (!self.finalOptions.disableMetaData) {
-						util.storeMetaData(metaData, metaDataPath);
-					}
+					}	
+					util.storeMetaData(metaData, metaDataPath);
 				}
 			});
 		});
-
-	};
-
-	if (takeScreenshot) {
-
-		browser.takeScreenshot().then(function (png) {
-			finishReport(png);
-		});
-
-	} else {
-
-		finishReport();
-
-	}
-
+	});
 
 };
 
