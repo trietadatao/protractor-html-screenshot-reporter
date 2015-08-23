@@ -52,32 +52,71 @@ function defaultMetaDataBuilder(spec, descriptions, results, capabilities) {
 		};
 	metaData.trace = "";
 	metaData.message = "";
+	var testcaseID = metaData.description;
+	var top = -1;
 
-	if (ticketUrls.hasOwnProperty(metaData.description)) {
-		metaData.message += '<p>Ticket: <a target="_blank" href="' + ticketUrls[metaData.description] +
-			'">' + ticketUrls[metaData.description] + '</a></p>';
-	}
-
-	if (notebookUrls.hasOwnProperty(metaData.description)) {
-		for (var i = 0; i < notebookUrls[metaData.description].length; i++) {
-			metaData.message += '<p><a target="_blank" href="' + notebookUrls[metaData.description][i] +
-				'">' + notebookUrls[metaData.description][i] + '</a></p>';
+	//Check and display top custom message
+	if (detailReport.hasOwnProperty(testcaseID)) {
+		if (detailReport[testcaseID].hasOwnProperty(top)) {
+			for (var j = 0; j < detailReport[testcaseID][top].length; j++) {
+				if (detailReport[testcaseID][top][j].type === 'link') {
+					metaData.message += '<p><a target="_blank" href="' + detailReport[testcaseID][top][j].url +
+						'">' + detailReport[testcaseID][top][j].text + '</a></p>';
+				}
+				else {
+					metaData.message += '<p>' + detailReport[testcaseID][top][j].text + '</p>';
+				}
+			}
 		}
 	}
 
 	for (var i = 0; i < results.items_.length; i++) {
 		var result = results.items_[i];
-		if(!results.passed()){
-			var failedItem = _.where(results.items_,{passed_: false})[i];
-			if(failedItem){
-				metaData.message += '<br/><p><b>' + (i+1) + '</b>. ' + failedItem.message + '</p>' || 'Failed';
-				metaData.trace += '<br/>' + failedItem.trace? ('<p>' + failedItem.trace.stack + '</p>' || 'No Stack trace information') : 'No Stack trace information';
-			}
+		var priorItem = "", inlineItem = "", postItem = "", item = "";
 
-		}else{
-			metaData.message += '<br/><p><b>' + (i+1) + '</b>. ' + result.message + '</p>' || 'Passed';
-			metaData.trace += '<br/><p>' + result.trace.stack + '</p>';
+		//Check and display custom message for each verification point (expect())
+		if (detailReport.hasOwnProperty(testcaseID)) {
+			if (detailReport[testcaseID].hasOwnProperty(i)) {
+				for (var j = 0; j < detailReport[testcaseID][i].length; j++) {
+					if (detailReport[testcaseID][i][j].type === 'link') {
+						item = '<a target="_blank" href="' + detailReport[testcaseID][i][j].url +
+							'">' + detailReport[testcaseID][i][j].text + '</a><br>';
+					}
+					else {
+						item = detailReport[testcaseID][i][j].text + '<br>';
+					}
+
+					position = detailReport[testcaseID][i][j].position;
+					if (position == 0) inlineItem += item;
+					else if (position == 1) postItem += item;
+					else priorItem += item;
+				}
+			}
 		}
+
+		metaData.message += '<p>';
+		if (priorItem.length > 0)
+			metaData.message += priorItem;
+		metaData.message += '<b>' + (i+1) + '</b>. ';
+		if (inlineItem.length > 0) metaData.message += inlineItem;
+
+		//Check and display expected result(s) for this test case
+		if(results.passed()){//Test case is passed, that means all verification points (expect()) are passed
+			metaData.message += result.message || 'Passed.';
+			metaData.trace += '<br>' + result.trace.stack;
+		}else{//Test case is failed, that means at least one VP is failed
+			if (result.message != 'Passed.') {//a failed VP in this failed case
+				metaData.message += '<span style="color: red">';
+				metaData.message += result.message + '</span>' || 'Failed.';
+			}
+			else {//a pass VP in this failed case
+				metaData.message += '<span style="color: green">';
+				metaData.message += result.message + '</span>' || 'Passed.';
+			}
+			metaData.trace += '<br>' + result.trace? ('<p>' + result.trace.stack + '</p>' || 'No Stack trace information') : 'No Stack trace information';
+		}
+		if (postItem.length > 0) metaData.message += '<br>' + postItem;
+		metaData.message += '</p>';
 	}
 
 	return metaData;
