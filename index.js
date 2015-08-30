@@ -196,7 +196,11 @@ ScreenshotReporter.prototype.reportSpecResults =
 function reportSpecResults(spec) {
 	/* global browser */
 	var self = this
-		, results = spec.results()
+		, results = spec.results();
+
+	//ignore setup and teardown
+	if (results.description == labelBeforeAll || results.description == labelAfterAll)
+		return;
 
 	if(!self.takeScreenShotsForSkippedSpecs && results.skipped) {
 		return;
