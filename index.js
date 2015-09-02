@@ -242,6 +242,7 @@ function reportSpecResults(spec) {
 					throw new Error('Could not create directory ' + directory);
 				} else {
 					util.addMetaData(metaData, metaDataPath, descriptions, self.finalOptions);
+					console.log(metaData.description + (metaData.passed ? " - Pass" : " - Fail"));
 					if(!(self.takeScreenShotsOnlyForFailedSpecs && results.passed())) {
 						util.storeScreenShot(png, screenShotPath);
 					}	
