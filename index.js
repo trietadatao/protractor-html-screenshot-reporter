@@ -103,7 +103,7 @@ function defaultMetaDataBuilder(spec, descriptions, results, capabilities) {
 		//Check and display expected result(s) for this test case
 		if(results.passed()){//Test case is passed, that means all verification points (expect()) are passed
 			metaData.message += result.message || 'Passed.';
-			metaData.trace += '<br>' + result.trace.stack;
+			//metaData.trace += '<br>' + result.trace.stack;
 		}else{//Test case is failed, that means at least one VP is failed
 			if (result.message != 'Passed.') {//a failed VP in this failed case
 				metaData.message += '<span style="color: red">';
@@ -113,7 +113,7 @@ function defaultMetaDataBuilder(spec, descriptions, results, capabilities) {
 				metaData.message += '<span style="color: green">';
 				metaData.message += result.message + '</span>' || 'Passed.';
 			}
-			metaData.trace += '<br>' + result.trace? ('<p>' + result.trace.stack + '</p>' || 'No Stack trace information') : 'No Stack trace information';
+			//metaData.trace += '<br>' + result.trace? ('<p>' + result.trace.stack + '</p>' || 'No Stack trace information') : 'No Stack trace information';
 		}
 		if (postItem.length > 0) metaData.message += '<br>' + postItem;
 		metaData.message += '</p>';
