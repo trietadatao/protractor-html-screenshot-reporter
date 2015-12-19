@@ -100,10 +100,26 @@ function defaultMetaDataBuilder(spec, descriptions, results, capabilities) {
 		metaData.message += '<b>' + (i+1) + '</b>. ';
 		if (inlineItem.length > 0) metaData.message += inlineItem;
 
+
+		//Refine output message before displaying
+		var msg = result.message;
+		if (result.message) {
+			//cut the session info
+			var index = msg.indexOf("(Session info:");
+			if (index >= 0) {
+				msg = msg.substr(0, index);
+			}
+			//format message in case html result
+			index = msg.indexOf("<");
+			if (index >= 0) {
+				msg = msg.substr(0, index) + "<pre>" + msg.substr(index) + "</pre>";
+			}
+		}
+
 		//Check and display expected result(s) for this test case
 		if(results.passed()){//Test case is passed, that means all verification points (expect()) are passed
-			metaData.message += result.message || 'Passed.';
-			//metaData.trace += '<br>' + result.trace.stack;
+			metaData.message += msg || 'Passed.';
+			metaData.trace += '<br>' + result.trace.stack;
 		}else{//Test case is failed, that means at least one VP is failed
 			if (result.message != 'Passed.') {//a failed VP in this failed case
 				metaData.message += '<span style="color: red">';
@@ -113,7 +129,7 @@ function defaultMetaDataBuilder(spec, descriptions, results, capabilities) {
 				metaData.message += '<span style="color: green">';
 				metaData.message += result.message + '</span>' || 'Passed.';
 			}
-			//metaData.trace += '<br>' + result.trace? ('<p>' + result.trace.stack + '</p>' || 'No Stack trace information') : 'No Stack trace information';
+			metaData.trace += '<br>' + result.trace? ('<p>' + result.trace.stack + '</p>' || 'No Stack trace information') : 'No Stack trace information';
 		}
 		if (postItem.length > 0) metaData.message += '<br>' + postItem;
 		metaData.message += '</p>';
