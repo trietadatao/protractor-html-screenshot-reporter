@@ -55,9 +55,6 @@ function defaultMetaDataBuilder(spec, descriptions, results, capabilities) {
 	if (results.startTime && results.endTime) {
 		metaData.startTime = results.startTime;
 		metaData.endTime = results.endTime;
-		metaData.message += "<p><b>Start time: </b>" + new Date(metaData.startTime).toISOString();
-		metaData.message += "<br/><b>End time: </b>" + new Date(metaData.endTime).toISOString();
-		metaData.message += "<br/><b>Total time: </b>" + (Math.round((metaData.endTime - metaData.startTime) / 100) / 10).toString() + "s";
 	}
 
 	var testcaseID = metaData.description;
