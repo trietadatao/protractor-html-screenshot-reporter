@@ -52,6 +52,13 @@ function defaultMetaDataBuilder(spec, descriptions, results, capabilities) {
 		};
 	metaData.trace = "";
 	metaData.message = "";
+	if (results.startTime && results.endTime) {
+		metaData.startTime = results.startTime;
+		metaData.endTime = results.endTime;
+		metaData.message += "<p><b>Start time: </b>" + new Date(metaData.startTime).toISOString();
+		metaData.message += "<br/><b>End time: </b>" + new Date(metaData.endTime).toISOString();
+	}
+
 	var testcaseID = metaData.description;
 	var top = -1;
 
